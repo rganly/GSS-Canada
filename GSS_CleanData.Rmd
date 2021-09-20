@@ -1,0 +1,162 @@
+---
+title: "GSS_Data_Clean"
+author: "Rachel Ganly"
+date: "9/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## This document pulls in and cleans GSS data to be used in regressions for the CaND3 data replication exercise
+
+
+```{r}
+# load packagaes
+
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
+library(nlme)
+library(ISLR)
+library(lmtest)
+library(sandwich)
+library(stargazer)
+
+
+# Read data
+
+GSS<-read.csv("gss-12M0025-E-2017-c-31_F1.csv")
+#There are 20,602 rows and 1,316 columns
+
+
+```
+
+## Explore data set and check for missing values
+```{r, echo=FALSE}
+ncol(GSS)
+nrow(GSS)
+sum(is.na(GSS)) 
+
+GSS%>%count(SRH_110) # self rated health 1 excellent to 5 poor, 7 to 9 = missing
+GSS%>%count(SRH_115) #self rated mental health 1 excellent to 5 poor, 7 to 9 = missing
+GSS%>%count(SLM_01) #subjective wellbeing 0 very dissatisfied to 10 very satisfied, missing values 97 to 99 = dont know, refused, NA
+GSS%>%count(EHG3_01B) #completed education #missing values 97 to 99 = dont know, refused, NA
+GSS%>%count(AMB_01) # aboriginal respondent or not #missing value 6 = valid skip as not born in relevant country, 7-9 don't know/refused
+GSS%>%count(AGEGR10) #age group 1=15-24 yrs, 7 = over 75 yrs #no missing
+GSS%>%count(SEX) #sex  1= male, 2 = female #no missing
+GSS%>%count(REGION) #region living # 5 regions, no missing
+GSS%>%count(FAMINCG2) #family income 1 = <$25k, 6 = >$125k, no missing
+GSS%>%count(VISMIN) #minority 1 = minority, 2 = not minority, 6 to 9 = missing
+
+
+```
+
+
+```{r}
+#Clean data
+Health<-GSS%>%select(AGEGR10,SEX,REGION, FAMINCG2,AMB_01,VISMIN, SRH_110,SRH_115, SLM_01, EHG3_01B)%>%rename(
+  EDU=EHG3_01B,
+  SRH=SRH_110,
+  MENTAL_SRH=SRH_115,
+  SWB=SLM_01,
+  AGE=AGEGR10,
+  INCOME=FAMINCG2,
+  ABOR=AMB_01,
+  ETHNIC_MIN=VISMIN)
+
+ncol(Health)
+colnames(Health)
+nrow(Health)
+
+#Recode 6 as 2 in ABOR
+Health<-Health%>%mutate(ABOR_final=ifelse(ABOR==6,2,ABOR))%>%select(-ABOR)
+Health<-Health%>%rename(ABOR=ABOR_final)
+colnames(Health)
+Health%>%count(ABOR)
+
+```
+  
+  
+```{r} 
+# Deal with missing data
+Health_NA<-Health%>%mutate(
+  EDU=ifelse(EDU>7,NA,EDU),
+  SRH=ifelse(SRH>5,NA,SRH),
+  MENTAL_SRH=ifelse(MENTAL_SRH>5,NA,MENTAL_SRH),
+  SWB=ifelse(SRH>10,NA,SWB),
+  AGE=ifelse(AGE>7,NA,AGE),
+  INCOME=ifelse(INCOME>6,NA,INCOME),
+  ABOR=ifelse(ABOR>=7,NA,ABOR),
+  ETHNIC_MIN=ifelse(ETHNIC_MIN>7,NA,ETHNIC_MIN),
+SEX=ifelse(SEX>2, NA, SEX))
+
+glimpse(Health_NA)
+sum(is.na(Health_NA))
+
+# Change categories from integers to factors
+Health_Cats<-Health_NA%>%mutate(
+  EDU=as.factor(EDU),
+  SRH=as.factor(SRH),
+  MENTAL_SRH=as.factor(MENTAL_SRH),
+  SWB=as.factor(SWB),
+  AGE=as.factor(AGE),
+  INCOME=as.factor(INCOME),
+  ABOR=as.factor(ABOR),
+  ETHNIC_MIN=as.factor(ETHNIC_MIN),
+SEX=as.factor(SEX))
+
+
+
+```
+
+Fit Health/wellbeing ~ INCOME+EDUCATION+SEX+AGE+REGION with classic standard errors and then with robust standard errors
+
+```{r}
+#Fit using OLS
+ols<-lm(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data=Health_NA)
+#show classic s.e.
+classic<-summary(ols)
+classic
+
+stargazer(ols)
+
+#calculate robust s.e. using coeftest
+robust<-coeftest(ols, vcov.=vcovHC(ols,type="HC1"))
+robust
+
+#Compare the standard errors
+cse<-classic$coefficients[,2]
+rse<-robust[,2]
+comparese<-cbind(cse,rse)
+colnames(comparese)<-c("Classic standard error","Robust standard error")
+comparese
+
+```
+
+
+```{r}
+#load nnet package for multinomial
+library(nnet)
+
+#fit a multinomial and return results
+mn <- multinom(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data =Health_Cats)
+summary(mn)
+```
+
+```{r}
+#load required package
+library(MASS)
+
+
+#fit an ordered logit
+ordered_logit <- polr(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data = Health_Cats, Hess = TRUE)
+summary(ordered_logit)
+
+exp(ordered_logit$coefficients[1])-1
+### Answer:
+#For females the odds of having  is 21.8% higher than males, holding other attributes constant.
+#For females the odds of going beyond senior level is 21.8% higher than males, holding other attributes constant
+```
+
