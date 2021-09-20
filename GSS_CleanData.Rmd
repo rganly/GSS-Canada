@@ -135,28 +135,3 @@ comparese
 
 ```
 
-
-```{r}
-#load nnet package for multinomial
-library(nnet)
-
-#fit a multinomial and return results
-mn <- multinom(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data =Health_Cats)
-summary(mn)
-```
-
-```{r}
-#load required package
-library(MASS)
-
-
-#fit an ordered logit
-ordered_logit <- polr(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data = Health_Cats, Hess = TRUE)
-summary(ordered_logit)
-
-exp(ordered_logit$coefficients[1])-1
-### Answer:
-#For females the odds of having  is 21.8% higher than males, holding other attributes constant.
-#For females the odds of going beyond senior level is 21.8% higher than males, holding other attributes constant
-```
-
