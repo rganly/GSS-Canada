@@ -1,0 +1,55 @@
+---
+title: "GSS_Run & Print OLS"
+author: "Rachel Ganly"
+date: "9/20/2021"
+output: html_document
+---
+
+```{r}
+# load packagaes
+
+library(tidyverse)
+library(ggplot2)
+library(lmtest)
+library(stargazer)
+
+
+# Read data
+
+load(file="GSS_Health_NA.csv")
+#There are 20,602 rows and 1,316 columns
+
+```
+
+Fit Health/wellbeing ~ INCOME+EDUCATION+SEX+AGE+REGION with classic standard errors and then with robust standard errors
+
+```{r}
+#Fit using OLS
+ols<-lm(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data=Health_NA)
+#show classic s.e.
+classic<-summary(ols)
+classic
+
+#calculate robust s.e. using coeftest
+robust<-coeftest(ols, vcov.=vcovHC(ols,type="HC1"))
+robust
+
+#Compare the standard errors
+cse<-classic$coefficients[,2]
+rse<-robust[,2]
+comparese<-cbind(cse,rse)
+colnames(comparese)<-c("Classic standard error","Robust standard error")
+comparese
+
+```
+
+Create Regression Results Table
+```{r}
+#Create regression table using Stargzer
+```
+
+Create Descriptive Data
+
+```{r}
+
+```
