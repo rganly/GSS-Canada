@@ -79,20 +79,34 @@ save(Health, file = "GSS_Health.csv")
   
   
 ```{r} 
+
+load("GSS_Health.csv")
 # Deal with missing data
 Health_NA<-Health%>%mutate(
   EDU=ifelse(EDU>7,NA,EDU),
   SRH=ifelse(SRH>5,NA,SRH),
   MENTAL_SRH=ifelse(MENTAL_SRH>5,NA,MENTAL_SRH),
-  SWB=ifelse(SRH>10,NA,SWB),
+  SWB=ifelse(SWB>10,NA,SWB),
   AGE=ifelse(AGE>7,NA,AGE),
   INCOME=ifelse(INCOME>6,NA,INCOME),
   ABOR=ifelse(ABOR>=7,NA,ABOR),
   ETHNIC_MIN=ifelse(ETHNIC_MIN>=7,NA,ETHNIC_MIN),
 SEX=ifelse(SEX>2, NA, SEX))
 
+#Check NA values disappeared
 glimpse(Health_NA)
 sum(is.na(Health_NA))
+Health_NA%>%count(EDU)
+Health_NA%>%count(SRH)
+Health_NA%>%count(MENTAL_SRH)
+Health_NA%>%count(SWB) 
+Health_NA%>%count(AGE)
+Health_NA%>%count(INCOME)
+Health_NA%>%count(ABOR)
+Health_NA%>%count(ETHNIC_MIN)
+Health_NA%>%count(SEX)
+
+#Save cleaned file
 
 save(Health_NA, file = "GSS_Health_NA.csv")
 
