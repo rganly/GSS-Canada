@@ -88,7 +88,7 @@ Health_NA<-Health%>%mutate(
   AGE=ifelse(AGE>7,NA,AGE),
   INCOME=ifelse(INCOME>6,NA,INCOME),
   ABOR=ifelse(ABOR>=7,NA,ABOR),
-  ETHNIC_MIN=ifelse(ETHNIC_MIN>7,NA,ETHNIC_MIN),
+  ETHNIC_MIN=ifelse(ETHNIC_MIN>=7,NA,ETHNIC_MIN),
 SEX=ifelse(SEX>2, NA, SEX))
 
 glimpse(Health_NA)
