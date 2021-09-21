@@ -5,14 +5,14 @@ date: "9/17/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## This document pulls in and cleans GSS data to be used in regressions for the CaND3 data replication exercise
 
 
 ```{r}
+
+#---- Clear data space
+rm(list = ls())
+
 # load packagaes
 
 library(tidyverse)
@@ -72,6 +72,9 @@ Health<-Health%>%rename(ABOR=ABOR_final)
 colnames(Health)
 Health%>%count(ABOR)
 
+
+save(Health, file = "GSS_Health.csv")
+
 ```
   
   
@@ -105,6 +108,8 @@ Health_Cats<-Health_NA%>%mutate(
   ETHNIC_MIN=as.factor(ETHNIC_MIN),
 SEX=as.factor(SEX))
 
+
+save(Health_Cats, file = "GSS_Health_Cats.csv")
 
 ```
 
