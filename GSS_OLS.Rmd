@@ -6,16 +6,22 @@ output: html_document
 ---
 
 ```{r}
+
+#---- Clear data space
+rm(list = ls())
+
 # load packagaes
 
 library(tidyverse)
 library(ggplot2)
 library(lmtest)
+library(sandwich)
 library(stargazer)
 
 
 # Read data
 
+load(file="GSS_Health_NA.csv")
 load(file="GSS_Health_NA.csv")
 #There are 20,602 rows and 1,316 columns
 
@@ -26,6 +32,11 @@ Fit Health/wellbeing ~ INCOME+EDUCATION+SEX+AGE+REGION with classic standard err
 ```{r}
 #Fit using OLS
 ols<-lm(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data=Health_NA)
+#show classic s.e.
+classic<-summary(ols)
+classic
+
+ols_factor<-lm(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data=Health_NA)
 #show classic s.e.
 classic<-summary(ols)
 classic
@@ -45,11 +56,22 @@ comparese
 
 Create Regression Results Table
 ```{r}
-#Create regression table using Stargzer
+#Create regression table using Stargazer
+
+stargazer(ols, type="text", style="demography")
+
+mylabs<- c("Constant", "Income", "Education Level", "Age","Sex", "Aboriginal Origin", "Non-Aboriginal Ethnic Minority")
+
+stargazer(ols, column.sep.width="3pt", dep.var.caption="", dep.var.labels= "Self Rated Health", title="OLS Regression Results", align=TRUE, no.space=TRUE,omit = c("REGION"),
+              style = "demography", covariate.labels=mylabs, type="text")
+
+
+
 ```
 
 Create Descriptive Data
 
 ```{r}
+
 
 ```
