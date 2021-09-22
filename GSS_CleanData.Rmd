@@ -1,14 +1,16 @@
 ---
 title: "GSS_Data_Clean"
 author: "Rachel Ganly"
-date: "9/17/2021"
+date: "9/21/2021"
 output: html_document
 ---
 
-## This document pulls in and cleans GSS data to be used in regressions for the CaND3 data replication exercise
+# This document cleans GSS data to be used in regressions for the CaND3 data replication exercise
 
+Load required packages
+Read in GSS file
 
-```{r}
+```{r, include=FALSE}
 
 #---- Clear data space
 rm(list = ls())
@@ -29,8 +31,9 @@ GSS<-read.csv("gss-12M0025-E-2017-c-31_F1.csv")
 
 ```
 
-## Explore data set and check for missing values
-```{r, echo=FALSE}
+Explore data set and check for missing values
+
+```{r, include=FALSE}
 ncol(GSS)
 nrow(GSS)
 sum(is.na(GSS)) 
@@ -49,10 +52,14 @@ GSS%>%count(VISMIN) #minority 1 = minority, 2 = not minority, 6 to 9 = missing
 
 ```
 
+Clean data
+- Select key variables for age group (by 10 years), sex, region, family income, aboriginal heritage, visible minority status, self-rated health, self-rated mental health, subjective well being, educational attainment and age in years
 
-```{r}
-#Clean data
-Health<-GSS%>%select(AGEGR10,SEX,REGION, FAMINCG2,AMB_01,VISMIN, SRH_110,SRH_115, SLM_01, EHG3_01B)%>%rename(
+- Recode aboriginal variable so that those who do not originate from relevant countries (valid skip) are classed as non-aboriginal 
+
+```{r, include=FALSE}
+#Select relevant variables and rename
+Health<-GSS%>%select(AGEGR10,SEX,REGION, FAMINCG2,AMB_01,VISMIN, SRH_110,SRH_115, SLM_01, EHG3_01B, AGEC)%>%rename(
   EDU=EHG3_01B,
   SRH=SRH_110,
   MENTAL_SRH=SRH_115,
@@ -77,8 +84,10 @@ save(Health, file = "GSS_Health.csv")
 
 ```
   
-  
-```{r} 
+Deal with Missing Data
+- Recode all variables' missing value to NA
+
+```{r, include=FALSE}
 
 load("GSS_Health.csv")
 # Deal with missing data
