@@ -5,10 +5,11 @@ date: "9/21/2021"
 output: html_document
 ---
 
-# This document cleans GSS data to be used in regressions for the CaND3 data replication exercise
+This document provides instructions and code for cleaning GSS data to be used in regressions for the CaND3 data replication exercise. 
 
-Load required packages
-Read in GSS file
+1. Load required packages.
+
+2. Read in GSS file named "gss-12M0025-E-2017-c-31_F1.csv". 
 
 ```{r, include=FALSE}
 
@@ -31,7 +32,7 @@ GSS<-read.csv("gss-12M0025-E-2017-c-31_F1.csv")
 
 ```
 
-Explore data set and check for missing values
+3. Explore data set and check for missing values. 
 
 ```{r, include=FALSE}
 ncol(GSS)
@@ -52,7 +53,8 @@ GSS%>%count(VISMIN) #minority 1 = minority, 2 = not minority, 6 to 9 = missing
 
 ```
 
-Clean data
+4. Clean data. 
+
 - Select key variables for age group (by 10 years), sex, region, family income, aboriginal heritage, visible minority status, self-rated health, self-rated mental health, subjective well being, educational attainment and age in years
 
 - Recode aboriginal variable so that those who do not originate from relevant countries (valid skip) are classed as non-aboriginal 
@@ -84,8 +86,9 @@ save(Health, file = "GSS_Health.csv")
 
 ```
   
-Deal with Missing Data
-- Recode all variables' missing value to NA
+5. Deal with Missing Data
+- Recode all variables' missing values to NA
+- Create two dataframes: one which retains integer values for covariates, and another which converts relevant categorical variables in GSS to factors
 
 ```{r, include=FALSE}
 
@@ -129,7 +132,8 @@ Health_Cats<-Health_NA%>%mutate(
   INCOME=as.factor(INCOME),
   ABOR=as.factor(ABOR),
   ETHNIC_MIN=as.factor(ETHNIC_MIN),
-SEX=as.factor(SEX))
+SEX=as.factor(SEX),
+REGION=as.factor(REGION))
 
 
 save(Health_Cats, file = "GSS_Health_Cats.csv")
