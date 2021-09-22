@@ -7,7 +7,9 @@ output:
   pdf_document: default
 ---
 
-Read in cleaned datasets and load packages
+This document provides instructions and code for running regressions using GSS data for the CaND3 data replication exercise. 
+
+1. Read in cleaned datasets, and load packages. 
 
 ```{r, include=FALSE}
 
@@ -31,8 +33,9 @@ load(file="GSS_Health_Cats.csv")
 
 ```
 
-Fit OLS Regressions with standard and robust errors
-Subjective Wellbeing ~ Self-rated health + self-rated mental health + family income + educational attainment + sex + age group + aboriginal status + ethnic minority status
+2. Fit OLS Regressions with standard and robust errors.
+
+Formula for regressions: Subjective Wellbeing ~ Self-rated health + self-rated mental health + family income + educational attainment + sex + age group + aboriginal status + ethnic minority status
 
 ```{r, include=FALSE}
 
@@ -62,9 +65,11 @@ comparese
 
 ```
 
-Fit logistic model
-- Create indicator variable for High Subjective Wellbeing whereby a score of 9 or above is "High" (1) and 8 or below is "Low" (0)
-- Fit a logit model
+3. Fit logistic model
+
+- Create indicator variable for High Subjective Wellbeing whereby a score of 9 or above is "High" (1) and 8 or below is "Low" (0). 
+- Fit a logit model. 
+- Formula for logit: High Subjective Wellbeing ~ Self-rated health + self-rated mental health + family income + educational attainment + sex + age group + aboriginal status + ethnic minority status. 
 
 ```{r, include=FALSE}
 #Create new indicator variable for High Subjective Wellbeing (9 or 10 out of 10)
@@ -80,23 +85,12 @@ logit<-glm(HighSWB~SRH+MENTAL_SRH+INCOME+EDU+SEX+AGE+ABOR+ETHNIC_MIN, data=Healt
 summary(logit)
 ```
 
-Fit ordered logit regression 
-- Use dataframe with categorical (factor) variables to run an ordered logit regression
 
-```{r, include=FALSE}
-# Ordered logistic regression
-
-ordered_logit <- polr(SRH~SWB+MENTAL_SRH+INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data = Health_Cats, Hess = TRUE)
-
-summary(ordered_logit)
-stargazer(ordered_logit, type="text", style = "demography")
-
-```
-
-Create Descriptive Data Table
-- Recode labels for all relevant variables
-- Drop variables which will not be shown in the descriptive data
-- Create labels for descriptive data table
+4. Create Descriptive Data Table. 
+- Load cleaned dataframe which contains factors for all categorical variables. 
+- Recode labels for all relevant variables. 
+- Drop variables for Subjective Wellbeing and Age Group which will not be shown in the descriptive data. 
+- Create labels for descriptive data table. 
 
 ```{r, include=FALSE}
 
@@ -129,8 +123,8 @@ DESCRIP_LABS <- c("Sex", "Region", "Household Income", "Ethnic Minority Status",
 
 ```
 
-Print Descriptive Data Table
-- Use vtable package to print summary statistics showing N and Mean/Proportion values
+5. Print Descriptive Data Table. 
+- Use vtable package to print summary statistics showing N and Mean/Proportion values. 
 
 ```{r, echo=FALSE}
 #Direct Output
@@ -143,9 +137,9 @@ st(DESCRIP, group="Subjective_Wellbeing",title="Summary Statistics",  digits=2, 
 ```
 
 
-Set up Regression Results Table
+6. Set up Regression Results Table
 - Create Labels for results table
-- Print directly and also print Latex Code
+- Print results directly,  and also print latex code
 
 ```{r, include=FALSE}
 #Create regression table using Stargazer
@@ -156,9 +150,10 @@ mylabs<- c("Poor Self-Rated Health", "Poor Self-Rated Mental Health","Income", "
 
 ```
 
-Print Final Regression Results Table
-_ Use stargazer package to print regression results table showing 3 models; two OLS models with standard and robust errors respectively, and logit model
-- Print directly and also print Latex Code
+7. Print Final Regression Results Table. 
+
+_ Use stargazer package to print regression results table showing 3 models; two OLS models with standard and robust errors respectively, and logit model. 
+- Print directly and also print latex code. 
 
 ```{r, echo=FALSE}
 
@@ -171,7 +166,6 @@ stargazer(ols,ols,logit, se=list(NULL, robust.se, NULL), column.sep.width="3pt",
 
 stargazer(ols,ols,logit, se=list(NULL, robust.se, NULL), column.sep.width="3pt", column.labels = c("SE", "Robust SE", ""),model.numbers = FALSE, colnames=FALSE, dep.var.labels= c("Wellbeing","High Wellbeing"), title="Association between Subjective Wellbeing and Demographic and Health Factors", align=TRUE, no.space=TRUE,
               style = "demography", covariate.labels=mylabs, type="latex")
-
 
 ```
 
