@@ -2,10 +2,14 @@
 title: "GSS_Run & Print OLS"
 author: "Rachel Ganly"
 date: "9/20/2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
-```{r}
+Read in cleaned datasets and load packages
+
+```{r, include=FALSE}
 
 #---- Clear data space
 rm(list = ls())
@@ -17,34 +21,38 @@ library(ggplot2)
 library(lmtest)
 library(sandwich)
 library(stargazer)
-
+library(MASS)
 
 # Read data
 
 load(file="GSS_Health_NA.csv")
-load(file="GSS_Health_NA.csv")
+load(file="GSS_Health_Cats.csv")
 #There are 20,602 rows and 1,316 columns
 
 ```
 
-Fit Health/wellbeing ~ INCOME+EDUCATION+SEX+AGE+REGION with classic standard errors and then with robust standard errors
+Fit OLS Regressions with standard and robust errors
+Subjective Wellbeing ~ Self-rated health + self-rated mental health + family income + educational attainment + sex + age group + aboriginal status + ethnic minority status
 
-```{r}
+```{r, include=FALSE}
+
 #Fit using OLS
-ols<-lm(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data=Health_NA)
+ols<-lm(SWB~SRH+MENTAL_SRH+INCOME+EDU+SEX+AGE+ABOR+ETHNIC_MIN, data=Health_NA)
 #show classic s.e.
 classic<-summary(ols)
 classic
 
-ols_factor<-lm(SRH~INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data=Health_NA)
-#show classic s.e.
-classic<-summary(ols)
-classic
 
 #calculate robust s.e. using coeftest
 robust<-coeftest(ols, vcov.=vcovHC(ols,type="HC1"))
+cov<-vcovHC(ols, type="HC")
+robust.se<-sqrt(diag(cov))
 robust
 
+```
+
+Compare Standard Errors
+```{r, include=FALSE}
 #Compare the standard errors
 cse<-classic$coefficients[,2]
 rse<-robust[,2]
@@ -54,24 +62,116 @@ comparese
 
 ```
 
-Create Regression Results Table
-```{r}
+Fit logistic model
+- Create indicator variable for High Subjective Wellbeing whereby a score of 9 or above is "High" (1) and 8 or below is "Low" (0)
+- Fit a logit model
+
+```{r, include=FALSE}
+#Create new indicator variable for High Subjective Wellbeing (9 or 10 out of 10)
+Health_NA<-Health_NA%>%mutate(HighSWB=ifelse(is.na(SWB), NA, ifelse(SWB>=9,1,0)))
+Health_Cats<-Health_Cats%>%mutate(HighSWB=ifelse(is.na(SWB), NA, ifelse(SWB==9,1, ifelse(SWB==10,1,0))))
+
+#Check new variable
+Health_NA%>%count(HighSWB,SWB)
+Health_Cats%>%count(HighSWB,SWB)
+
+# Run logit model
+logit<-glm(HighSWB~SRH+MENTAL_SRH+INCOME+EDU+SEX+AGE+ABOR+ETHNIC_MIN, data=Health_NA, family = binomial(link = "logit"))
+summary(logit)
+```
+
+Fit ordered logit regression 
+- Use dataframe with categorical (factor) variables to run an ordered logit regression
+
+```{r, include=FALSE}
+# Ordered logistic regression
+
+ordered_logit <- polr(SRH~SWB+MENTAL_SRH+INCOME+EDU+SEX+AGE+REGION+ABOR+ETHNIC_MIN, data = Health_Cats, Hess = TRUE)
+
+summary(ordered_logit)
+stargazer(ordered_logit, type="text", style = "demography")
+
+```
+
+Create Descriptive Data Table
+- Recode labels for all relevant variables
+- Drop variables which will not be shown in the descriptive data
+- Create labels for descriptive data table
+
+```{r, include=FALSE}
+
+library(vtable)
+
+#Select and mutate relevant variable for the table
+
+DESCRIP<-Health_Cats%>%dplyr::select(-SWB,-AGE)%>%
+  mutate(REGION=as.factor(REGION))%>%
+  mutate(SEX=case_when(SEX==1 ~ "Male",SEX==2 ~ "Female"),
+         INCOME=case_when(INCOME==1 | INCOME==2 ~ "Less than $50,000",
+                          INCOME==3 | INCOME==4 ~ "$50,000 to $99,999",
+                          INCOME==5 | INCOME==5 ~ "$100,000 or over"),
+         ETHNIC_MIN=case_when(ETHNIC_MIN==1 ~ "Ethnic Minority",ETHNIC_MIN==2 ~ "Non-Ethnic Minority"),
+         ABOR=case_when(ABOR==1 ~ "Aboriginal Heritage",ABOR==2 ~ "Non-Aboriginal Heritage"),
+         EDU=case_when(EDU==1 | EDU==2 ~ "1. High School Diploma or Below",
+                          EDU==3 | EDU==4 | EDU==5 ~ "2. Non-Degree Tertiary Education",
+                          EDU==6 | EDU==7 ~ "3. Bachelor's Degree or Above"),
+         REGION=case_when(REGION==1 ~ "Atlantic",REGION==2 ~ "Quebec",
+                          REGION==3 ~ "Onatrio",REGION==4 ~ "Prarie",REGION==5 ~ "British Colombia"),
+         SRH=case_when(SRH==1 ~ "1. Excellent",SRH==2 ~ "2. Very Good",
+                          SRH==3 ~ "3. Good",SRH==4 ~ "4. Fair",SRH==5 ~ "5. Poor"),
+         MENTAL_SRH=case_when(MENTAL_SRH==1 ~ "1. Excellent",MENTAL_SRH==2 ~ "2. Very Good",
+                          MENTAL_SRH==3 ~ "3. Good",MENTAL_SRH==4 ~ "4. Fair",MENTAL_SRH==5 ~ "5. Poor"),
+         Subjective_Wellbeing=case_when(HighSWB==1 ~ "High",HighSWB==0 ~ "Not High"))%>%
+  dplyr::select(-HighSWB)
+
+DESCRIP_LABS <- c("Sex", "Region", "Household Income", "Ethnic Minority Status", "Self-Rated Health", "Self-Rated Mental Health", "Educational Attainment", "Age (years)", "Aboriginal Heritage")
+
+
+```
+
+Print Descriptive Data Table
+- Use vtable package to print summary statistics showing N and Mean/Proportion values
+
+```{r, echo=FALSE}
+#Direct Output
+
+st(DESCRIP, group="Subjective_Wellbeing",title="Summary Statistics",  digits=2, summ=c('notNA(x)','mean(x)'), labels = DESCRIP_LABS, summ.names = c("Number of Individuals", "Mean"))
+
+#Latex Code
+st(DESCRIP, group="Subjective_Wellbeing",title="Summary Statistics",  digits=2, summ=c('notNA(x)','mean(x)'), labels = DESCRIP_LABS, summ.names = c("Number of Individuals", "Mean"), out="latex")
+
+```
+
+
+Set up Regression Results Table
+- Create Labels for results table
+- Print directly and also print Latex Code
+
+```{r, include=FALSE}
 #Create regression table using Stargazer
 
-stargazer(ols, type="text", style="demography")
+stargazer(ols,ols,logit, se=list(NULL, robust.se, NULL), type="text", style="demography")
 
-mylabs<- c("Constant", "Income", "Education Level", "Age","Sex", "Aboriginal Origin", "Non-Aboriginal Ethnic Minority")
+mylabs<- c("Poor Self-Rated Health", "Poor Self-Rated Mental Health","Income", "Education Level", "Sex","Age", "Aboriginal Origin", "Non-Aboriginal Ethnic Minority", "Constant")
 
-stargazer(ols, column.sep.width="3pt", dep.var.caption="", dep.var.labels= "Self Rated Health", title="OLS Regression Results", align=TRUE, no.space=TRUE,omit = c("REGION"),
+```
+
+Print Final Regression Results Table
+_ Use stargazer package to print regression results table showing 3 models; two OLS models with standard and robust errors respectively, and logit model
+- Print directly and also print Latex Code
+
+```{r, echo=FALSE}
+
+#Direct Ouput
+
+stargazer(ols,ols,logit, se=list(NULL, robust.se, NULL), column.sep.width="3pt", column.labels = c("SE", "Robust SE", ""),model.numbers = FALSE, colnames=FALSE, dep.var.labels= c("Wellbeing","High Wellbeing"), title="Association between Subjective Wellbeing and Demographic and Health Factors", align=TRUE, no.space=TRUE,
               style = "demography", covariate.labels=mylabs, type="text")
 
+#Latex Code
+
+stargazer(ols,ols,logit, se=list(NULL, robust.se, NULL), column.sep.width="3pt", column.labels = c("SE", "Robust SE", ""),model.numbers = FALSE, colnames=FALSE, dep.var.labels= c("Wellbeing","High Wellbeing"), title="Association between Subjective Wellbeing and Demographic and Health Factors", align=TRUE, no.space=TRUE,
+              style = "demography", covariate.labels=mylabs, type="latex")
 
 
 ```
 
-Create Descriptive Data
-
-```{r}
-
-
-```
