@@ -1,9 +1,12 @@
-# GSS-Canada
+# GSS-Canada Replication Activity for CaND3 2021-2022. 
+
 Data replication activity for CaND3 using GSS Canada Data
 
 This document explains how to conduct a replication of the data and regression tables which are enclosed in "GSS_OLS.html" file. 
 
 Note: A data statement is enclosed below. The data used in this exercise is not publically available. 
+
+## Instructions 
 
 1. Follow the instructions listed on the GSS_CleanData file.
 
@@ -21,7 +24,7 @@ As part of McGill University, the CAND3 initiative has a license to use the data
 Trainees who belong to another DLI institution should re-download the data using the ODESI site using the login provided by their institution if they wish to make use of the data for other purposes.
 
 
-Data citations
+### Data citations
 
 Statistics Canada. 2019. Census of Population, 2016 [Canada] Public Use Microdata File (PUMF): Individuals File. Statistics Canada [producer and distributor], accessed September 10, 2021. ID: pumf-98M0001-E-2016-individuals.
 
