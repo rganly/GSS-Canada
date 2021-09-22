@@ -6,6 +6,12 @@ This document explains how to conduct a replication of the data and regression t
 
 Note: A data statement is enclosed below. The data used in this exercise is not publically available. 
 
+## Files
+Key files contained in this folder are
+- A data access statement
+- GSS_Clean Data which provides instructions on cleaning data
+- GSS_OLS which provides instructions on running regressions
+
 ## Instructions 
 
 1. Follow the instructions listed on the GSS_CleanData file.
