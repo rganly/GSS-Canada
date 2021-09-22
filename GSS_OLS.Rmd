@@ -150,7 +150,7 @@ mylabs<- c("Poor Self-Rated Health", "Poor Self-Rated Mental Health","Income", "
 
 7. Print Final Regression Results Table. 
 
-_ Use stargazer package to print regression results table showing 3 models; two OLS models with standard and robust errors respectively, and logit model. 
+- Use stargazer package to print regression results table showing 3 models; two OLS models with standard and robust errors respectively, and logit model. 
 - Print directly and also print latex code. 
 
 ```{r, echo=FALSE}
