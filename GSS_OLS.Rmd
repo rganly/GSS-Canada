@@ -1,10 +1,9 @@
 ---
 title: "GSS_Run & Print OLS"
 author: "Rachel Ganly"
-date: "9/20/2021"
+date: "9/22/2021"
 output:
   html_document: default
-  pdf_document: default
 ---
 
 This document provides instructions and code for running regressions using GSS data for the CaND3 data replication exercise. 
@@ -35,7 +34,7 @@ load(file="GSS_Health_Cats.csv")
 
 2. Fit OLS Regressions with standard and robust errors.
 
-Formula for regressions: Subjective Wellbeing ~ Self-rated health + self-rated mental health + family income + educational attainment + sex + age group + aboriginal status + ethnic minority status
+- Formula for regressions: Subjective Wellbeing ~ Self-rated health + self-rated mental health + family income + educational attainment + sex + age group + aboriginal status + ethnic minority status. 
 
 ```{r, include=FALSE}
 
@@ -54,7 +53,7 @@ robust
 
 ```
 
-Compare Standard Errors
+- Compare Standard Errors. 
 ```{r, include=FALSE}
 #Compare the standard errors
 cse<-classic$coefficients[,2]
@@ -138,8 +137,7 @@ st(DESCRIP, group="Subjective_Wellbeing",title="Summary Statistics",  digits=2, 
 
 
 6. Set up Regression Results Table
-- Create Labels for results table
-- Print results directly,  and also print latex code
+- Create labels for results table. 
 
 ```{r, include=FALSE}
 #Create regression table using Stargazer
